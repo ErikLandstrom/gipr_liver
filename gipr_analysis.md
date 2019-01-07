@@ -424,3 +424,40 @@ meanSdPlot(data_norm)
 
 When doing normalization after filtering it seems that more changes than before
 filtering. I should look up the function!
+
+
+```r
+# Plot missing values stats
+plot_missval(data_norm)
+```
+
+![](gipr_analysis_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
+```r
+plot_detect(data_norm)
+```
+
+![](gipr_analysis_files/figure-html/unnamed-chunk-14-2.png)<!-- -->
+
+From these plots, it would probably be interesting to see whether different
+imputation methods would give different results.
+
+## Impute data
+
+
+```r
+# Impute missing data using random draws from a manually defined left-shifted
+# Gaussian distribution (for MNAR). This is the default method in MaxQuant
+data_imp_man <- impute(data_norm, fun = "man", shift = 1.8, scale = 0.3)
+```
+
+
+```r
+# Plot imputation
+plot_imputation(data_norm, data_imp_man)
+```
+
+![](gipr_analysis_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+
+These plots might be a bit misleading since we're only interested in the
+treatment variable.
