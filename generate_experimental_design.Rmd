@@ -1,0 +1,72 @@
+---
+title: "Generate experimental design"
+output: 
+  html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+```{r read_data}
+# read file with animal info
+animal_groups <- read_xlsx("Animal List young group.xlsx")
+
+# Read maxquant file
+data <- read_tsv("proteinGroups_qex2.txt")
+```
+
+Extract sample names from LFQ columns in maxquant file.
+
+```{r sample_names}
+lfq_colnum <- grep("LFQ.+", colnames(data))
+
+lfq_colnames <- colnames(data)[min(lfq_colnum):max(lfq_colnum)]
+
+lfq_colnames <- as_tibble(str_extract_all(lfq_colnames, "[A-Z]_[0-9]+", simplify = TRUE))
+
+colnames(lfq_colnames) <- "sample"
+
+lfq_colnames <- lfq_colnames %>%
+  separate(sample, into = c("treatment", "ID"), sep = "_") 
+
+lfq_colnames$ID <- as.numeric(lfq_colnames$ID)
+```
+
+Join the lfq_colnames with animal groups.
+
+```{r join}
+animal_groups <- full_join(animal_groups, lfq_colnames, by = "ID")
+```
+
+Unite treat, gender, series, and litter.
+
+```{r unite1}
+# Reduce columns to one letter 
+animal_groups <- animal_groups %>%
+  mutate(gender = str_extract(Gender, "[a-z]"),
+         series = Series,
+         litter = str_extract(Litter, "\\d"),
+         treat = treatment,
+         replicate = ID) %>%
+  dplyr::select(treatment, gender, series, litter, ID, treat, replicate)
+
+# Unite independent variables
+animal_groups <- animal_groups %>%
+  unite(condition, treatment, gender, series, litter, sep = "_", remove = FALSE)
+```
+
+Unite treatment and ID.
+
+```{r unite2}
+experimental_design <- animal_groups %>%
+  unite(label, treat, replicate, sep = "_", remove = FALSE) %>%
+  dplyr::select(label, condition, replicate)
+```
+
+```{r write}
+# Write experimental design
+write_tsv(experimental_design, "experimental_design.txt")
+```
+
