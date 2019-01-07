@@ -65,6 +65,13 @@ experimental_design <- animal_groups %>%
   dplyr::select(label, condition, replicate)
 ```
 
+Remove 1495 since it is a muscle sample.
+
+```{r}
+experimental_design <- experimental_design %>%
+  dplyr::filter(replicate != "1495")
+```
+
 ```{r write}
 # Write experimental design
 write_tsv(experimental_design, "experimental_design.txt")
